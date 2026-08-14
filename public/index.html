@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentPulse AI | Attrition Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+    <div class="max-w-4xl mx-auto px-4 py-10">
+        
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-indigo-400 tracking-tight">TalentPulse AI</h1>
+            <p class="text-slate-400 mt-2">AI-Powered Employee Attrition & Workforce Analytics Platform</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Form Card -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+                <h2 class="text-xl font-semibold mb-4 text-white">Employee Attributes</h2>
+                <form id="predictionForm" class="space-y-4">
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase">Age</label>
+                        <input type="number" id="age" value="28" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase">Monthly Income ($)</label>
+                        <input type="number" id="monthly_income" value="3200" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase">Years at Company</label>
+                        <input type="number" id="years_at_company" value="1" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 uppercase">Overtime Requirements</label>
+                        <select id="overtime" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="1">Yes (Frequent Overtime)</option>
+                            <option value="0">No (Standard Hours)</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 uppercase">Job Satisfaction</label>
+                            <select id="job_satisfaction" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
+                                <option value="1">1 - Low</option>
+                                <option value="2">2 - Medium</option>
+                                <option value="3" selected>3 - High</option>
+                                <option value="4">4 - Very High</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 uppercase">Work-Life Balance</label>
+                            <select id="work_life_balance" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
+                                <option value="1">1 - Poor</option>
+                                <option value="2" selected>2 - Fair</option>
+                                <option value="3">3 - Good</option>
+                                <option value="4">4 - Excellent</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition duration-200">
+                        Analyze Attrition Risk
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Card -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 text-white">Risk Evaluation</h2>
+                    
+                    <div id="resultsContainer" class="hidden space-y-6">
+                        <div class="text-center p-6 bg-slate-900 rounded-lg border border-slate-700">
+                            <span id="riskBadge" class="px-3 py-1 text-xs font-bold rounded-full uppercase"></span>
+                            <div id="probabilityText" class="text-5xl font-extrabold mt-4 text-white">0%</div>
+                            <p class="text-xs text-slate-400 mt-1">Predicted Attrition Probability</p>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-300 mb-2">Identified Risk Drivers:</h3>
+                            <ul id="driversList" class="list-disc list-inside text-sm text-slate-400 space-y-1"></ul>
+                        </div>
+                    </div>
+
+                    <div id="placeholder" class="text-center py-20 text-slate-500">
+                        Submit employee data on the left to generate real-time AI risk analysis.
+                    </div>
+                </div>
+
+                <footer class="text-xs text-slate-500 text-center mt-6">
+                    Powered by FastAPI & Scikit-Learn Concepts
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                age: parseInt(document.getElementById('age').value),
+                monthly_income: parseFloat(document.getElementById('monthly_income').value),
+                years_at_company: parseInt(document.getElementById('years_at_company').value),
+                overtime: parseInt(document.getElementById('overtime').value),
+                job_satisfaction: parseInt(document.getElementById('job_satisfaction').value),
+                work_life_balance: parseInt(document.getElementById('work_life_balance').value)
+            };
+
+            try {
+                const res = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                document.getElementById('placeholder').classList.add('hidden');
+                document.getElementById('resultsContainer').classList.remove('hidden');
+
+                document.getElementById('probabilityText').innerText = data.probability_percent + '%';
+
+                const badge = document.getElementById('riskBadge');
+                badge.innerText = data.risk_level + ' - ' + data.attrition_risk;
+
+                if (data.risk_level === 'CRITICAL' || data.risk_level === 'WARNING') {
+                    badge.className = "px-3 py-1 text-xs font-bold rounded-full bg-red-900/60 text-red-300 border border-red-700 uppercase";
+                } else {
+                    badge.className = "px-3 py-1 text-xs font-bold rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-700 uppercase";
+                }
+
+                const driversList = document.getElementById('driversList');
+                driversList.innerHTML = '';
+                data.key_risk_drivers.forEach(driver => {
+                    const li = document.createElement('li');
+                    li.innerText = driver;
+                    driversList.appendChild(li);
+                });
+
+            } catch (err) {
+                alert('Error connecting to predictive engine.');
+            }
+        });
+    </script>
+</body>
+</html>
