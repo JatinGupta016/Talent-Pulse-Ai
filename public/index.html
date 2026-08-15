@@ -5,8 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TalentPulse AI | HR Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- HTML2PDF Library for exporting professional reports -->
+    <!-- html2pdf.js bundle -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Off-screen dedicated PDF container to prevent blank renders */
+        #pdfCaptureWrapper {
+            position: fixed;
+            left: -9999px;
+            top: 0;
+            width: 750px;
+            background: #ffffff;
+            color: #0f172a;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+    </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
     <div class="max-w-5xl mx-auto px-4 py-10">
@@ -14,7 +26,7 @@
         <!-- Header -->
         <header class="text-center mb-10">
             <h1 class="text-4xl font-extrabold text-indigo-400 tracking-tight">TalentPulse AI</h1>
-            <p class="text-slate-400 mt-2">AI-Powered Employee Attrition & Prescriptive Analytics</p>
+            <p class="text-slate-400 mt-2">AI-Powered Employee Attrition & Prescriptive Retention Platform</p>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -24,13 +36,13 @@
                 <form id="predictionForm" class="space-y-4">
                     
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 uppercase">Age (18-60)</label>
-                        <input type="number" id="age" min="18" max="60" value="28" required class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
+                        <label class="block text-xs font-medium text-slate-400 uppercase">Age (18 - 60)</label>
+                        <input type="number" id="age" min="18" max="60" value="26" required class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
                     </div>
 
                     <div>
                         <label class="block text-xs font-medium text-slate-400 uppercase">Monthly Income (₹)</label>
-                        <input type="number" id="monthly_income" min="2000" max="200000" value="35000" required placeholder="₹2,000 - ₹2,00,000" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
+                        <input type="number" id="monthly_income" min="2000" max="200000" value="28000" required placeholder="₹2,000 - ₹2,00,000" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -40,15 +52,15 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-400 uppercase">Tenure (Months)</label>
-                            <input type="number" id="months_at_company" min="0" max="11" value="6" required class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
+                            <input type="number" id="months_at_company" min="0" max="11" value="4" required class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-medium text-slate-400 uppercase">Overtime Requirements</label>
                         <select id="overtime" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
-                            <option value="1">Yes (Frequent Overtime)</option>
-                            <option value="0" selected>No (Standard Hours)</option>
+                            <option value="1" selected>Yes (Frequent Overtime)</option>
+                            <option value="0">No (Standard Hours)</option>
                         </select>
                     </div>
 
@@ -57,8 +69,8 @@
                             <label class="block text-xs font-medium text-slate-400 uppercase">Job Satisfaction</label>
                             <select id="job_satisfaction" class="w-full mt-1 p-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white outline-none">
                                 <option value="1">1 - Low</option>
-                                <option value="2">2 - Medium</option>
-                                <option value="3" selected>3 - High</option>
+                                <option value="2" selected>2 - Medium</option>
+                                <option value="3">3 - High</option>
                                 <option value="4">4 - Very High</option>
                             </select>
                         </div>
@@ -73,7 +85,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-3 mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition duration-200">
+                    <button type="submit" class="w-full py-3 mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition duration-200 shadow-md">
                         Analyze Attrition Risk
                     </button>
                 </form>
@@ -84,7 +96,7 @@
                 <div>
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-semibold text-white">AI Risk Evaluation</h2>
-                        <button id="downloadBtn" onclick="downloadPDF()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-4 rounded transition">
+                        <button id="downloadBtn" onclick="downloadPDF()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded shadow transition">
                             📄 Download PDF Report
                         </button>
                     </div>
@@ -102,53 +114,73 @@
                         </div>
 
                         <div class="p-4 bg-indigo-900/30 border border-indigo-700/50 rounded-lg">
-                            <h3 class="text-xs font-bold text-indigo-400 mb-2 uppercase tracking-wider">AI Prescriptive Action Plan:</h3>
-                            <ul id="actionsList" class="list-disc list-inside text-xs text-slate-300 space-y-2"></ul>
+                            <h3 class="text-xs font-bold text-indigo-400 mb-2 uppercase tracking-wider">AI Prescriptive Action Plan (3-4 Points):</h3>
+                            <ul id="actionsList" class="list-disc list-inside text-xs text-slate-300 space-y-1.5"></ul>
                         </div>
                     </div>
 
                     <div id="placeholder" class="text-center py-20 text-slate-500">
-                        Submit employee data on the left to generate real-time AI risk analysis.
+                        Submit employee data on the left to generate real-time AI risk analysis and download an official report.
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- HIDDEN PDF TEMPLATE (Certificate Style) -->
-    <div id="pdfTemplate" class="hidden absolute top-0 left-0 bg-white text-slate-900 w-[800px] p-10 border-[12px] border-slate-800 rounded-xl z-[-50]">
-        <div class="border-4 border-indigo-200 p-8 rounded-lg h-full relative">
-            <h1 class="text-4xl font-extrabold text-slate-800 text-center uppercase tracking-widest border-b-2 border-indigo-100 pb-4 mb-8">TalentPulse AI</h1>
-            <h2 class="text-2xl font-bold text-center text-indigo-700 mb-8">Official Employee Retention Report</h2>
-            
-            <div class="grid grid-cols-2 gap-8 mb-8">
-                <div>
-                    <h3 class="font-bold text-slate-500 uppercase text-sm border-b pb-1 mb-2">Employee Profile</h3>
-                    <p class="text-lg"><strong>Age:</strong> <span id="pdfAge"></span></p>
-                    <p class="text-lg"><strong>Income:</strong> <span id="pdfIncome"></span></p>
-                    <p class="text-lg"><strong>Tenure:</strong> <span id="pdfTenure"></span></p>
+    <!-- PDF CERTIFICATE TEMPLATE -->
+    <div id="pdfCaptureWrapper">
+        <div style="border: 10px solid #1e293b; padding: 30px; border-radius: 8px; background: #ffffff;">
+            <div style="border: 2px solid #cbd5e1; padding: 25px; border-radius: 6px; position: relative;">
+                
+                <!-- PDF Title -->
+                <div style="text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;">
+                    <h1 style="font-size: 26px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 2px; margin: 0;">TalentPulse AI</h1>
+                    <p style="font-size: 13px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">Workforce Retention & Attrition Evaluation Certificate</p>
                 </div>
-                <div class="text-right">
-                    <h3 class="font-bold text-slate-500 uppercase text-sm border-b pb-1 mb-2">Risk Assessment</h3>
-                    <p class="text-2xl font-extrabold text-slate-800" id="pdfRiskLevel"></p>
-                    <p class="text-4xl font-black text-indigo-600 mt-2" id="pdfProb"></p>
-                    <p class="text-sm text-slate-500 uppercase">Attrition Probability</p>
+
+                <!-- 2-Column Overview -->
+                <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 55%; vertical-align: top; padding-right: 15px;">
+                            <h3 style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px;">Employee Profile Details</h3>
+                            <table style="width: 100%; font-size: 13px; color: #334155; line-height: 1.6;">
+                                <tr><td><strong>Age:</strong></td><td id="pdfAge">-</td></tr>
+                                <tr><td><strong>Monthly Income:</strong></td><td id="pdfIncome">-</td></tr>
+                                <tr><td><strong>Tenure:</strong></td><td id="pdfTenure">-</td></tr>
+                                <tr><td><strong>Overtime Required:</strong></td><td id="pdfOvertime">-</td></tr>
+                                <tr><td><strong>Job Satisfaction:</strong></td><td id="pdfJobSat">-</td></tr>
+                                <tr><td><strong>Work-Life Balance:</strong></td><td id="pdfWlb">-</td></tr>
+                            </table>
+                        </td>
+                        <td style="width: 45%; vertical-align: top; text-align: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px;">
+                            <h3 style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; margin: 0 0 6px 0;">Risk Assessment</h3>
+                            <div id="pdfRiskLevel" style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">-</div>
+                            <div id="pdfProb" style="font-size: 38px; font-weight: 900; color: #4f46e5; margin: 0;">0%</div>
+                            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600; margin-top: 4px;">Attrition Probability</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Risk Drivers -->
+                <div style="margin-bottom: 16px;">
+                    <h3 style="font-size: 12px; font-weight: 700; color: #dc2626; text-transform: uppercase; border-bottom: 1px solid #fee2e2; padding-bottom: 4px; margin-bottom: 8px;">Identified Risk Drivers</h3>
+                    <ul id="pdfDrivers" style="font-size: 12px; color: #334155; margin: 0; padding-left: 20px; line-height: 1.5;"></ul>
                 </div>
-            </div>
 
-            <div class="mb-8">
-                <h3 class="font-bold text-red-600 uppercase text-lg border-b-2 border-red-100 pb-2 mb-4">Identified Risk Factors</h3>
-                <ul id="pdfDrivers" class="list-disc list-inside text-lg text-slate-700 space-y-2"></ul>
-            </div>
+                <!-- Prescriptive Plan -->
+                <div style="background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 6px; padding: 12px 16px; margin-bottom: 25px;">
+                    <h3 style="font-size: 12px; font-weight: 700; color: #4338ca; text-transform: uppercase; border-bottom: 1px solid #c7d2fe; padding-bottom: 4px; margin-bottom: 8px;">AI Prescriptive Action Plan (Recommendations)</h3>
+                    <ul id="pdfActions" style="font-size: 12px; color: #1e1b4b; margin: 0; padding-left: 20px; line-height: 1.6;"></ul>
+                </div>
 
-            <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100">
-                <h3 class="font-bold text-indigo-800 uppercase text-lg border-b-2 border-indigo-200 pb-2 mb-4">Recommended HR Action Plan</h3>
-                <ul id="pdfActions" class="list-disc list-inside text-lg text-slate-800 space-y-3"></ul>
-            </div>
+                <!-- Footer -->
+                <table style="width: 100%; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #94a3b8;">
+                    <tr>
+                        <td>Generated by <strong>TalentPulse AI Analytics Engine</strong></td>
+                        <td style="text-align: right;">Evaluation Date: <span id="pdfDate"></span></td>
+                    </tr>
+                </table>
 
-            <div class="absolute bottom-8 right-8 text-right text-slate-400 text-sm">
-                Generated securely by TalentPulse AI<br>
-                Date: <span id="pdfDate"></span>
             </div>
         </div>
     </div>
@@ -161,15 +193,18 @@
             const income = parseFloat(document.getElementById('monthly_income').value);
             const years = parseInt(document.getElementById('years_at_company').value);
             const months = parseInt(document.getElementById('months_at_company').value);
+            const overtime = parseInt(document.getElementById('overtime').value);
+            const jobSat = parseInt(document.getElementById('job_satisfaction').value);
+            const wlb = parseInt(document.getElementById('work_life_balance').value);
 
             const payload = {
                 age: age,
                 monthly_income: income,
                 years_at_company: years,
                 months_at_company: months,
-                overtime: parseInt(document.getElementById('overtime').value),
-                job_satisfaction: parseInt(document.getElementById('job_satisfaction').value),
-                work_life_balance: parseInt(document.getElementById('work_life_balance').value)
+                overtime: overtime,
+                job_satisfaction: jobSat,
+                work_life_balance: wlb
             };
 
             try {
@@ -181,11 +216,12 @@
 
                 const data = await res.json();
 
-                // UI Updates
+                // UI Visibility Updates
                 document.getElementById('placeholder').classList.add('hidden');
                 document.getElementById('resultsContainer').classList.remove('hidden');
                 document.getElementById('downloadBtn').classList.remove('hidden');
 
+                // Metric Card Updates
                 document.getElementById('probabilityText').innerText = data.probability_percent + '%';
                 const badge = document.getElementById('riskBadge');
                 badge.innerText = data.risk_level + ' - ' + data.attrition_risk;
@@ -196,31 +232,34 @@
                     badge.className = "px-3 py-1 text-xs font-bold rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-700 uppercase";
                 }
 
-                // Populate Dashboard Lists
+                // Populate Drivers
                 const driversList = document.getElementById('driversList');
                 driversList.innerHTML = '';
                 data.key_risk_drivers.forEach(driver => {
                     driversList.innerHTML += `<li>${driver}</li>`;
                 });
 
+                // Populate AI Actions
                 const actionsList = document.getElementById('actionsList');
                 actionsList.innerHTML = '';
                 data.recommended_actions.forEach(action => {
                     actionsList.innerHTML += `<li>${action}</li>`;
                 });
 
-                // Populate Hidden PDF Template
-                document.getElementById('pdfAge').innerText = age + ' years';
-                document.getElementById('pdfIncome').innerText = '₹' + income.toLocaleString('en-IN');
-                document.getElementById('pdfTenure').innerText = years + ' Yrs, ' + months + ' Mos';
-                document.getElementById('pdfRiskLevel').innerText = data.risk_level + ' RISK';
+                // Populate All PDF Certificate Fields
+                document.getElementById('pdfAge').innerText = age + ' Years';
+                document.getElementById('pdfIncome').innerText = '₹' + income.toLocaleString('en-IN') + ' / month';
+                document.getElementById('pdfTenure').innerText = years + ' Years, ' + months + ' Months';
+                document.getElementById('pdfOvertime').innerText = overtime === 1 ? 'Yes (Frequent)' : 'No (Standard)';
+                document.getElementById('pdfJobSat').innerText = jobSat + ' / 4';
+                document.getElementById('pdfWlb').innerText = wlb + ' / 4';
+                
+                document.getElementById('pdfRiskLevel').innerText = data.risk_level + ' - ' + data.attrition_risk;
                 document.getElementById('pdfProb').innerText = data.probability_percent + '%';
                 
                 document.getElementById('pdfDrivers').innerHTML = driversList.innerHTML;
                 document.getElementById('pdfActions').innerHTML = actionsList.innerHTML;
-                
-                const today = new Date();
-                document.getElementById('pdfDate').innerText = today.toLocaleDateString();
+                document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
             } catch (err) {
                 alert('Error connecting to predictive engine.');
@@ -229,20 +268,17 @@
 
         // PDF Generation Function
         function downloadPDF() {
-            const element = document.getElementById('pdfTemplate');
-            element.classList.remove('hidden'); // Show temporarily for capture
+            const element = document.getElementById('pdfCaptureWrapper');
             
             const opt = {
-                margin:       [0, 0, 0, 0],
-                filename:     'TalentPulse_Risk_Report.pdf',
-                image:        { type: 'jpeg', quality: 1 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                margin:       [0.3, 0.3, 0.3, 0.3],
+                filename:     'TalentPulse_Attrition_Evaluation_Report.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.classList.add('hidden'); // Hide again after download
-            });
+            html2pdf().set(opt).from(element).save();
         }
     </script>
 </body>
