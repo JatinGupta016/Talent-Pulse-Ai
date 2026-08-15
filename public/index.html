@@ -5,21 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TalentPulse AI | HR Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf.js bundle -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        /* Keep it undisplayed by default to prevent blank canvas bugs */
-        #pdfCaptureWrapper {
-            display: none;
-            width: 800px;
-            background: #ffffff;
-            color: #0f172a;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans relative overflow-x-hidden">
-    <div class="max-w-5xl mx-auto px-4 py-10 z-10 relative">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+    <div class="max-w-5xl mx-auto px-4 py-10">
         
         <!-- Header -->
         <header class="text-center mb-10">
@@ -126,7 +115,8 @@
     </div>
 
     <!-- PDF CERTIFICATE TEMPLATE -->
-    <div id="pdfCaptureWrapper">
+    <!-- Kept completely hidden on the main page via Tailwind's 'hidden' class -->
+    <div id="pdfCaptureWrapper" class="hidden" style="width: 800px; background-color: #ffffff; color: #0f172a; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
         <div style="border: 10px solid #1e293b; padding: 30px; border-radius: 8px; background: #ffffff;">
             <div style="border: 2px solid #cbd5e1; padding: 25px; border-radius: 6px; position: relative;">
                 
@@ -264,29 +254,29 @@
             }
         });
 
-        // PDF Generation Function
+        // The Bulletproof Clone Node Method for PDF Generation
         function downloadPDF() {
-            const element = document.getElementById('pdfCaptureWrapper');
+            // 1. Grab the hidden template container
+            const originalElement = document.getElementById('pdfCaptureWrapper');
             
-            // 1. Temporarily bring the element into the layout behind the UI
-            element.style.display = 'block';
-            element.style.position = 'absolute';
-            element.style.top = '0';
-            element.style.left = '0';
-            element.style.zIndex = '-9999';
+            // 2. Clone it perfectly in memory
+            const clonedElement = originalElement.cloneNode(true);
             
+            // 3. Remove the 'hidden' class from the clone so the PDF engine can see the content
+            clonedElement.classList.remove('hidden');
+            clonedElement.style.display = 'block';
+            
+            // 4. Configure PDF output
             const opt = {
-                margin:       [0.3, 0.3, 0.3, 0.3],
-                filename:     'TalentPulse_Attrition_Evaluation_Report.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                margin:       0.3,
+                filename:     'TalentPulse_Attrition_Evaluation.pdf',
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            // 2. Capture the PDF, then hide the element again
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.style.display = 'none';
-            });
+            // 5. Generate PDF strictly from the memory clone (bypasses browser display restrictions)
+            html2pdf().set(opt).from(clonedElement).save();
         }
     </script>
 </body>
