@@ -13,6 +13,7 @@ class EmployeeInput(BaseModel):
     work_life_balance: int  # 1 to 4
 
 @app.post("/api/predict")
+@app.post("/predict")
 def predict_attrition(data: EmployeeInput):
     # Risk scoring algorithm simulating ML classification
     base_score = 0.15
