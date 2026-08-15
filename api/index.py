@@ -23,51 +23,68 @@ def predict_attrition(data: EmployeeInput):
     # Calculate total tenure in months
     total_months = (data.years_at_company * 12) + data.months_at_company
 
-    # Logical Risk Scoring
+    # 1. Overtime Impact
     if data.overtime == 1:
         base_score += 0.25
-        factors.append("High Overtime Frequency")
-        actions.append("Audit workload distribution and enforce mandatory rest/comp-time to prevent burnout.")
-        
+        factors.append("High Overtime Frequency & Workload Pressure")
+        actions.append("Implement mandatory rest periods and redistribute project bandwidth to reduce burnout.")
+    else:
+        actions.append("Maintain standard operating hours and monitor ongoing sprint capacities.")
+
+    # 2. Job Satisfaction Impact
     if data.job_satisfaction <= 2:
         base_score += 0.20
-        factors.append("Low Job Satisfaction")
-        actions.append("Schedule a 'stay interview' to identify blockers in their day-to-day role and map out career growth paths.")
-        
+        factors.append("Low Job & Role Satisfaction")
+        actions.append("Conduct a 1-on-1 Stay Interview to identify role blockers and realign daily tasks with career goals.")
+    else:
+        actions.append("Provide continuous upskilling pathways and cross-functional leadership opportunities.")
+
+    # 3. Work-Life Balance Impact
     if data.work_life_balance <= 2:
         base_score += 0.15
-        factors.append("Poor Work-Life Balance")
-        actions.append("Offer flexible working hours, hybrid options, or a 4-day work week trial to improve baseline wellness.")
-        
-    # Adjusted for Indian Rupees (e.g., flagging below ₹30,000 as a risk factor depending on the role)
+        factors.append("Sub-optimal Work-Life Balance")
+        actions.append("Introduce flexible working schedules or hybrid work flexibility to support baseline wellness.")
+    else:
+        actions.append("Sustain current team culture initiatives and wellness support programs.")
+
+    # 4. Compensation Band (INR)
     if data.monthly_income < 30000:
         base_score += 0.15
-        factors.append("Below-Average Salary Band")
-        actions.append("Trigger an immediate compensation review against current market benchmarks for this role in India.")
-        
+        factors.append("Compensation Below Market Benchmark (Under ₹30k)")
+        actions.append("Trigger an immediate compensation review against current industry salary bands.")
+
+    # 5. Tenure Impact
     if total_months < 24:
         base_score += 0.10
-        factors.append("Flight Risk: Low Tenure")
-        actions.append("Increase check-ins and mentorship alignment to improve early-stage employee retention.")
+        factors.append("Early Career/Tenure Flight Risk (< 2 Years)")
 
-    # Calculate final probability
+    # Calculate final probability percentage
     probability = min(max(base_score, 0.05), 0.95)
     is_high_risk = probability >= 0.45
 
-    # Categorize Risk
+    # Determine Risk Tier and Final Action Plan (Ensuring 3-4 curated points)
     if probability > 0.60:
         risk_level = "CRITICAL"
-        actions.insert(0, "🚨 URGENT: Flag to HR Business Partner for immediate retention intervention.")
+        actions.insert(0, "🚨 Immediate Intervention: Escalate retention risk to HR Business Partner within 48 hours.")
     elif probability >= 0.45:
         risk_level = "WARNING"
+        actions.insert(0, "⚠️ Active Monitoring: Schedule monthly manager check-ins to track morale and sentiment.")
     else:
         risk_level = "STABLE"
-        actions = ["Continue current management approach. No immediate intervention required."]
+        actions = [
+            "Maintain current talent engagement cadence and quarterly performance reviews.",
+            "Offer specialized technical certifications to encourage long-term retention.",
+            "Recognize contributions in team forums to reinforce organizational loyalty.",
+            "Review career trajectory periodically during annual appraisal cycles."
+        ]
+
+    # Trim to 4 key high-impact points maximum
+    final_actions = actions[:4]
 
     return {
         "attrition_risk": "High Risk" if is_high_risk else "Low Risk",
         "probability_percent": round(probability * 100, 1),
         "risk_level": risk_level,
-        "key_risk_drivers": factors if factors else ["No critical risk drivers identified."],
-        "recommended_actions": actions
+        "key_risk_drivers": factors if factors else ["No critical risk drivers identified. Employee profile indicates high stability."],
+        "recommended_actions": final_actions
     }
